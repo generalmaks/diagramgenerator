@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net9.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="PlantUml.Net" Version="1.4.80" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="icons\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="icons\NewIcon.png" />
+      <None Remove="icons\OpenProjectIcon.png" />
+      <Resource Include="icons\OpenProjectIcon.png" />
+    </ItemGroup>
+
+</Project>
