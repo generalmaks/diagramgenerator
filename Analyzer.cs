@@ -7,8 +7,9 @@ namespace OopRgr;
 static public class Analyzer
 {
     private static string _filePath;
+    private static List<NamespaceFile> _namespaces = new List<NamespaceFile>();
     private static List<CsFile> _csFiles = new List<CsFile>();
-
+    private static string _umlDiagram;
     static public void GetProject()
     {
         var openDialog = new OpenFolderDialog() { Title = "Виберіть папку з вашим проектом" };
@@ -49,7 +50,8 @@ static public class Analyzer
                     }
                     else if (line.StartsWith("namespace "))
                     {
-                        csFile.SetNamespace(line);
+                        string nameSpaceName = line.Replace("namespace ", "").Trim();
+                        NamespaceFile ns = new NamespaceFile(nameSpaceName, csFile);
                     }
                 }
             }
@@ -65,7 +67,7 @@ static public class Analyzer
 
     static private void WriteDiagramFile()
     {
-        
+        _umlDiagram.Insert(_umlDiagram.Length - 1, "@startuml/n");
     }
     static public byte[] GenerateDiagramImage(string plantUmlText)
     {
