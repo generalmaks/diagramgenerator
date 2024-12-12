@@ -86,7 +86,13 @@ static public class Analyzer
             foreach (var csFile in namespaceFile.CsFiles)
             {
                 Console.WriteLine("\t" + csFile.Name);
-                _umlDiagram.AppendLine($"\tclass {csFile.Name} {{}}\n");
+                string name = csFile.Name;
+                var indexOfDot = name.IndexOf('.');
+                if (indexOfDot >= 0)
+                {
+                    name = name.Substring(0, indexOfDot);
+                }
+                _umlDiagram.AppendLine($"\tclass \"{name}\" {{}}\n");
             }
 
             _umlDiagram.AppendLine("}");
@@ -100,7 +106,7 @@ static public class Analyzer
                 {
                     if (namespaceNames.Contains(usingFile))
                     {
-                        _umlDiagram.AppendLine($"{csFile.Name} --> {usingFile}\n");
+                        _umlDiagram.AppendLine($"\"{csFile.Name}\" --> {usingFile}\n");
                     }
                 }
             }
