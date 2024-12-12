@@ -1,5 +1,6 @@
 using PlantUml.Net;
 using System.IO;
+using System.Text;
 using Microsoft.Win32;
 
 namespace OopRgr;
@@ -9,7 +10,8 @@ static public class Analyzer
     private static string _filePath;
     private static List<NamespaceFile> _namespaces = new List<NamespaceFile>();
     private static List<CsFile> _csFiles = new List<CsFile>();
-    private static string _umlDiagram;
+    private static StringBuilder _umlDiagram = new StringBuilder();
+
     static public void GetProject()
     {
         var openDialog = new OpenFolderDialog() { Title = "Виберіть папку з вашим проектом" };
@@ -51,7 +53,17 @@ static public class Analyzer
                     else if (line.StartsWith("namespace "))
                     {
                         string nameSpaceName = line.Replace("namespace ", "").Trim();
-                        NamespaceFile ns = new NamespaceFile(nameSpaceName, csFile);
+                        nameSpaceName = nameSpaceName.Replace(";", "").Trim();
+                        if (!_namespaces.Any(n => n.Name == nameSpaceName))
+                        {
+                            NamespaceFile ns = new NamespaceFile(nameSpaceName, csFile);
+                            _namespaces.Add(ns);
+                        }
+
+
+                        _namespaces
+                            .FirstOrDefault(namespaceFile => namespaceFile.Name == nameSpaceName)?
+                            .CsFiles.Add(csFile);
                     }
                 }
             }
@@ -59,16 +71,45 @@ static public class Analyzer
             _csFiles.Add(csFile);
         }
 
-        foreach (var csfile in _csFiles)
-        {
-            csfile.Print();
-        }
+        WriteDiagramFile();
     }
 
     static private void WriteDiagramFile()
     {
-        _umlDiagram.Insert(_umlDiagram.Length - 1, "@startuml/n");
+        _umlDiagram.Clear();
+        _umlDiagram.AppendLine("@startuml");
+        var namespaceNames = new HashSet<string>(_namespaces.Select(n => n.Name));
+        foreach (var namespaceFile in _namespaces)
+        {
+            Console.WriteLine(namespaceFile.Name + ":");
+            _umlDiagram.AppendLine($"namespace {namespaceFile.Name} {{\n");
+            foreach (var csFile in namespaceFile.CsFiles)
+            {
+                Console.WriteLine("\t" + csFile.Name);
+                _umlDiagram.AppendLine($"\tclass {csFile.Name} {{}}\n");
+            }
+
+            _umlDiagram.AppendLine("}");
+        }
+
+        foreach (var namespaceFile in _namespaces)
+        {
+            foreach (var csFile in namespaceFile.CsFiles)
+            {
+                foreach (var usingFile in csFile.UsingsDirectories)
+                {
+                    if (namespaceNames.Contains(usingFile))
+                    {
+                        _umlDiagram.AppendLine($"{csFile.Name} --> {usingFile}\n");
+                    }
+                }
+            }
+        }
+
+        _umlDiagram.AppendLine("@enduml");
+        Console.WriteLine(_umlDiagram);
     }
+
     static public byte[] GenerateDiagramImage(string plantUmlText)
     {
         var rendererFactory = new RendererFactory();

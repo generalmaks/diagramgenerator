@@ -2,8 +2,8 @@ namespace OopRgr;
 
 public class CsFile
 {
-    private string Name;
-    private List<string> UsingsDirectories = new List<string>();
+    public string Name;
+    public List<string> UsingsDirectories = new List<string>();
 
     public CsFile()
     {
@@ -12,6 +12,7 @@ public class CsFile
     public void AddUsing(string @using)
     {
         @using = @using.Replace("using ", "");
+        @using = @using.Replace(";", "");
         UsingsDirectories.Add(@using);
     }
 
