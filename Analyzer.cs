@@ -1,6 +1,9 @@
 using PlantUml.Net;
 using System.IO;
 using System.Text;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
 namespace OopRgr;
@@ -11,6 +14,7 @@ static public class Analyzer
     private static List<NamespaceFile> _namespaces = new List<NamespaceFile>();
     private static List<CsFile> _csFiles = new List<CsFile>();
     private static StringBuilder _umlDiagram = new StringBuilder();
+    public static System.Windows.Media.ImageSource DiagramImage;
 
     static public void GetProject()
     {
@@ -78,6 +82,7 @@ static public class Analyzer
     {
         _umlDiagram.Clear();
         _umlDiagram.AppendLine("@startuml");
+        _umlDiagram.AppendLine("skinparam linetype ortho");
         var namespaceNames = new HashSet<string>(_namespaces.Select(n => n.Name));
         foreach (var namespaceFile in _namespaces)
         {
@@ -92,6 +97,7 @@ static public class Analyzer
                 {
                     name = name.Substring(0, indexOfDot);
                 }
+
                 _umlDiagram.AppendLine($"\tclass \"{name}\" {{}}\n");
             }
 
@@ -114,6 +120,21 @@ static public class Analyzer
 
         _umlDiagram.AppendLine("@enduml");
         Console.WriteLine(_umlDiagram);
+        var imageBytes = GenerateDiagramImage(_umlDiagram.ToString());
+        if (imageBytes != null)
+        {
+            BitmapImage bitmap = new BitmapImage();
+            using (MemoryStream ms = new MemoryStream(imageBytes))
+            {
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.StreamSource = ms;
+                bitmap.EndInit();
+                bitmap.Freeze();
+            }
+
+            DiagramImage = bitmap;
+        }
     }
 
     static public byte[] GenerateDiagramImage(string plantUmlText)
@@ -122,6 +143,7 @@ static public class Analyzer
         var renderer = rendererFactory.CreateRenderer();
 
         byte[] imageBytes = renderer.Render(plantUmlText, OutputFormat.Png);
+
         return imageBytes;
     }
 }

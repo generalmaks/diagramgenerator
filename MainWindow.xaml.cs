@@ -21,6 +21,7 @@ public partial class MainWindow : Window
             if (tag == "OpenProject")
             {
                 Analyzer.GetProject();
+                ImageViewer.Source = Analyzer.DiagramImage;
             }
         }
     }
