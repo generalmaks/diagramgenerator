@@ -5,22 +5,44 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OopRgr"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="720" Width="1080">
     <Grid>
         <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="Файл">
+                    <MenuItem Header="Новий файл" />
+                    <MenuItem Header="Відкрити файл" />
+                    <MenuItem Header="Відкрити проект" />
+                </MenuItem>
+            </Menu>
             <ToolBar Height="50" VerticalAlignment="Top" DockPanel.Dock="Top">
+                <Button>
+                    <Image Source="/icons/ClearFileIcon.png" ToolTip="Новий файл" />
+                </Button>
                 <Button Click="Click" Tag="OpenProject">
-                    <Image Source="/icons/OpenProjectIcon.png" ToolTip="Відкрити проект"/>
+                    <Image Source="/icons/OpenProjectIcon.png" ToolTip="Відкрити проект" />
+                </Button>
+                <Separator />
+                <Button Click="OpenDiagramText">
+                    <Image Source="/icons/OpenDiagramText.png" ToolTip="Відкрити текст діаграми" />
                 </Button>
             </ToolBar>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" /> <!-- Top section -->
+                    <ColumnDefinition Width="5" /> <!-- GridSplitter -->
+                    <ColumnDefinition Width="0.5*" /> <!-- Bottom section -->
+                </Grid.ColumnDefinitions>
 
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                <Grid>
+                <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                     <Viewbox x:Name="DiagramViewbox" MouseWheel="DiagramViewbox_OnMouseWheel" Stretch="Uniform">
                         <Image x:Name="ImageViewer" Stretch="Uniform" />
                     </Viewbox>
-                </Grid>
-            </ScrollViewer>
+                </ScrollViewer>
+                <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Gray"
+                              ResizeDirection="Columns" />
+                <TextBox x:Name="DiagramTextBox" Grid.Column="2" AcceptsReturn="True" Text="Тут буде знаходитись текст вашої UML-діаграми" VerticalScrollBarVisibility="Auto" />
+            </Grid>
         </DockPanel>
     </Grid>
 </Window>

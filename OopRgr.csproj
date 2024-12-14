@@ -20,6 +20,10 @@
       <None Remove="icons\NewIcon.png" />
       <None Remove="icons\OpenProjectIcon.png" />
       <Resource Include="icons\OpenProjectIcon.png" />
+      <None Remove="icons\OpenDiagramText.png" />
+      <Resource Include="icons\OpenDiagramText.png" />
+      <None Remove="icons\ClearFileIcon.png" />
+      <Resource Include="icons\ClearFileIcon.png" />
     </ItemGroup>
 
 </Project>

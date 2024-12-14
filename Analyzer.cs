@@ -13,7 +13,7 @@ static public class Analyzer
     private static string _filePath;
     private static List<NamespaceFile> _namespaces = new List<NamespaceFile>();
     private static List<CsFile> _csFiles = new List<CsFile>();
-    private static StringBuilder _umlDiagram = new StringBuilder();
+    public static StringBuilder _umlDiagram = new StringBuilder();
     public static System.Windows.Media.ImageSource DiagramImage;
 
     static public void GetProject()
@@ -87,7 +87,7 @@ static public class Analyzer
         foreach (var namespaceFile in _namespaces)
         {
             Console.WriteLine(namespaceFile.Name + ":");
-            _umlDiagram.AppendLine($"namespace {namespaceFile.Name} {{\n");
+            _umlDiagram.AppendLine($"namespace {namespaceFile.Name} {{");
             foreach (var csFile in namespaceFile.CsFiles)
             {
                 Console.WriteLine("\t" + csFile.Name);
@@ -98,7 +98,7 @@ static public class Analyzer
                     name = name.Substring(0, indexOfDot);
                 }
 
-                _umlDiagram.AppendLine($"\tclass \"{name}\" {{}}\n");
+                _umlDiagram.AppendLine($"\tclass \"{name}\" {{}}");
             }
 
             _umlDiagram.AppendLine("}");
@@ -112,7 +112,7 @@ static public class Analyzer
                 {
                     if (namespaceNames.Contains(usingFile))
                     {
-                        _umlDiagram.AppendLine($"\"{csFile.Name}\" --> {usingFile}\n");
+                        _umlDiagram.AppendLine($"\"{csFile.Name}\" --> {usingFile}");
                     }
                 }
             }

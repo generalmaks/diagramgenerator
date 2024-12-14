@@ -26,6 +26,7 @@ public partial class MainWindow : Window
             {
                 Analyzer.GetProject();
                 ImageViewer.Source = Analyzer.DiagramImage;
+                DiagramTextBox.Text = Analyzer._umlDiagram.ToString();
             }
         }
     }
@@ -47,5 +48,11 @@ public partial class MainWindow : Window
 
             e.Handled = true; // Mark the event as handled to prevent further propagation.
         }
+    }
+
+    private void OpenDiagramText(object sender, RoutedEventArgs e)
+    {
+        var diagramTextWindow = new DiagramTextWindow(Analyzer._umlDiagram.ToString());
+        diagramTextWindow.ShowDialog();
     }
 }
