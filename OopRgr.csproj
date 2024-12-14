@@ -23,7 +23,10 @@
       <None Remove="icons\OpenDiagramText.png" />
       <Resource Include="icons\OpenDiagramText.png" />
       <None Remove="icons\ClearFileIcon.png" />
-      <Resource Include="icons\ClearFileIcon.png" />
+      <None Remove="icons\NewFileIcon.png" />
+      <Resource Include="icons\NewFileIcon.png" />
+      <None Remove="icons\SaveFileIcon.png" />
+      <Resource Include="icons\SaveFileIcon.png" />
     </ItemGroup>
 
 </Project>

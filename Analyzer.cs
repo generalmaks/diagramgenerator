@@ -34,6 +34,7 @@ static public class Analyzer
     static private void Analyze()
     {
         _csFiles.Clear();
+        _namespaces.Clear();
         List<string> files = Directory.GetFiles(_filePath, "*.cs", SearchOption.AllDirectories).ToList();
         files = files.Except(files.Where(f => f.Contains("Debug"))).ToList();
         files = files.Except(files.Where(f => f.Contains("Release"))).ToList();
@@ -58,6 +59,7 @@ static public class Analyzer
                     {
                         string nameSpaceName = line.Replace("namespace ", "").Trim();
                         nameSpaceName = nameSpaceName.Replace(";", "").Trim();
+                        nameSpaceName = nameSpaceName.Replace("{", "").Trim();
                         if (!_namespaces.Any(n => n.Name == nameSpaceName))
                         {
                             NamespaceFile ns = new NamespaceFile(nameSpaceName, csFile);
@@ -86,11 +88,9 @@ static public class Analyzer
         var namespaceNames = new HashSet<string>(_namespaces.Select(n => n.Name));
         foreach (var namespaceFile in _namespaces)
         {
-            Console.WriteLine(namespaceFile.Name + ":");
             _umlDiagram.AppendLine($"namespace {namespaceFile.Name} {{");
             foreach (var csFile in namespaceFile.CsFiles)
             {
-                Console.WriteLine("\t" + csFile.Name);
                 string name = csFile.Name;
                 var indexOfDot = name.IndexOf('.');
                 if (indexOfDot >= 0)
@@ -98,7 +98,14 @@ static public class Analyzer
                     name = name.Substring(0, indexOfDot);
                 }
 
-                _umlDiagram.AppendLine($"\tclass \"{name}\" {{}}");
+                if (name.StartsWith("I"))
+                {
+                    _umlDiagram.AppendLine($"\tinterface \"{name}\"{{}}");
+                }
+                else
+                {
+                    _umlDiagram.AppendLine($"\tclass \"{name}\" {{}}");
+                }
             }
 
             _umlDiagram.AppendLine("}");
@@ -141,9 +148,37 @@ static public class Analyzer
     {
         var rendererFactory = new RendererFactory();
         var renderer = rendererFactory.CreateRenderer();
+        try
+        {
+            byte[] imageBytes = renderer.Render(plantUmlText, OutputFormat.Png);
+            if (imageBytes != null)
+            {
+                BitmapImage bitmap = new BitmapImage();
+                using (MemoryStream ms = new MemoryStream(imageBytes))
+                {
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = ms;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                }
 
-        byte[] imageBytes = renderer.Render(plantUmlText, OutputFormat.Png);
+                DiagramImage = bitmap;
+            }
 
-        return imageBytes;
+            return imageBytes;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+
+        return null;
+    }
+
+    public static void ChangeDiagram(string newDiagram)
+    {
+        _umlDiagram = new StringBuilder(newDiagram);
+        GenerateDiagramImage(_umlDiagram.ToString());
     }
 }

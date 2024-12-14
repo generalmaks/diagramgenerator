@@ -11,6 +11,7 @@ namespace OopRgr;
 public partial class MainWindow : Window
 {
     private ScaleTransform _scaleTransform = new ScaleTransform();
+
     public MainWindow()
     {
         InitializeComponent();
@@ -19,9 +20,22 @@ public partial class MainWindow : Window
 
     private void Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button button)
+        if (sender is Button button || sender is MenuItem menuItem)
         {
-            var tag = button?.Tag.ToString();
+            string? tag;
+            if (sender is Button button2)
+            {
+                tag = button2.Tag.ToString();
+            }
+            else if (sender is MenuItem menuItem2)
+            {
+                tag = menuItem2.Tag.ToString();
+            }
+            else
+            {
+                return;
+            }
+
             if (tag == "OpenProject")
             {
                 Analyzer.GetProject();
@@ -37,16 +51,22 @@ public partial class MainWindow : Window
         {
             if (e.Delta > 0)
             {
-                _scaleTransform.ScaleX *= 1.1; // Zoom in.
+                _scaleTransform.ScaleX *= 1.1;
                 _scaleTransform.ScaleY *= 1.1;
             }
             else
             {
-                _scaleTransform.ScaleX /= 1.1; // Zoom out.
+                _scaleTransform.ScaleX /= 1.1;
                 _scaleTransform.ScaleY /= 1.1;
             }
 
-            e.Handled = true; // Mark the event as handled to prevent further propagation.
+            e.Handled = true;
         }
+    }
+
+    private void ReloadDiagram(object sender, RoutedEventArgs e)
+    {
+        Analyzer.ChangeDiagram(DiagramTextBox.Text);
+        ImageViewer.Source = Analyzer.DiagramImage;
     }
 }
