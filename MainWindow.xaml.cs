@@ -49,10 +49,4 @@ public partial class MainWindow : Window
             e.Handled = true; // Mark the event as handled to prevent further propagation.
         }
     }
-
-    private void OpenDiagramText(object sender, RoutedEventArgs e)
-    {
-        var diagramTextWindow = new DiagramTextWindow(Analyzer._umlDiagram.ToString());
-        diagramTextWindow.ShowDialog();
-    }
 }

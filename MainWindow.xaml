@@ -23,9 +23,6 @@
                     <Image Source="/icons/OpenProjectIcon.png" ToolTip="Відкрити проект" />
                 </Button>
                 <Separator />
-                <Button Click="OpenDiagramText">
-                    <Image Source="/icons/OpenDiagramText.png" ToolTip="Відкрити текст діаграми" />
-                </Button>
             </ToolBar>
             <Grid>
                 <Grid.ColumnDefinitions>
