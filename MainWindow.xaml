@@ -8,17 +8,15 @@
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <DockPanel>
-            <!-- ToolBar -->
             <ToolBar Height="50" VerticalAlignment="Top" DockPanel.Dock="Top">
                 <Button Click="Click" Tag="OpenProject">
                     <Image Source="/icons/OpenProjectIcon.png" ToolTip="Відкрити проект"/>
                 </Button>
             </ToolBar>
 
-            <!-- Image Viewer Area -->
-            <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                 <Grid>
-                    <Viewbox Stretch="Uniform">
+                    <Viewbox x:Name="DiagramViewbox" MouseWheel="DiagramViewbox_OnMouseWheel" Stretch="Uniform">
                         <Image x:Name="ImageViewer" Stretch="Uniform" />
                     </Viewbox>
                 </Grid>
