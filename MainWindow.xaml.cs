@@ -40,7 +40,7 @@ public partial class MainWindow : Window
             {
                 Analyzer.GetProject();
                 ImageViewer.Source = Analyzer.DiagramImage;
-                DiagramTextBox.Text = Analyzer._umlDiagram.ToString();
+                DiagramTextBox.Text = Analyzer.UmlDiagram.ToString();
             }
         }
     }
@@ -51,22 +51,24 @@ public partial class MainWindow : Window
         {
             if (e.Delta > 0)
             {
-                _scaleTransform.ScaleX *= 1.1;
-                _scaleTransform.ScaleY *= 1.1;
+                ScaleImage(1.1);
             }
             else
             {
-                _scaleTransform.ScaleX /= 1.1;
-                _scaleTransform.ScaleY /= 1.1;
+                ScaleImage(0.9);
             }
-
             e.Handled = true;
         }
     }
 
+    private void ScaleImage(double scale)
+    {
+        _scaleTransform.ScaleX *= scale;
+        _scaleTransform.ScaleY *= scale;
+    }
     private void ReloadDiagram(object sender, RoutedEventArgs e)
     {
-        Analyzer.ChangeDiagram(DiagramTextBox.Text);
+        Analyzer.SetDiagram(DiagramTextBox.Text);
         ImageViewer.Source = Analyzer.DiagramImage;
     }
 }

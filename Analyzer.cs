@@ -1,29 +1,28 @@
 using PlantUml.Net;
 using System.IO;
 using System.Text;
-using System.Windows.Controls;
-using System.Windows.Media;
+using System.Windows;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
 namespace OopRgr;
 
-static public class Analyzer
+public static class Analyzer
 {
     private static string _filePath;
     private static List<NamespaceFile> _namespaces = new List<NamespaceFile>();
     private static List<CsFile> _csFiles = new List<CsFile>();
-    public static StringBuilder _umlDiagram = new StringBuilder();
+    public static StringBuilder UmlDiagram = new StringBuilder();
     public static System.Windows.Media.ImageSource DiagramImage;
 
-    static public void GetProject()
+    public static void GetProject()
     {
         var openDialog = new OpenFolderDialog() { Title = "Виберіть папку з вашим проектом" };
         if (openDialog.ShowDialog() == true)
         {
             _filePath = openDialog.FolderName;
             Console.WriteLine($"Opened from {_filePath}");
-            Analyze();
+            AnalyzeProject();
         }
         else
         {
@@ -31,14 +30,10 @@ static public class Analyzer
         }
     }
 
-    static private void Analyze()
+    static private void AnalyzeProject()
     {
-        _csFiles.Clear();
-        _namespaces.Clear();
-        List<string> files = Directory.GetFiles(_filePath, "*.cs", SearchOption.AllDirectories).ToList();
-        files = files.Except(files.Where(f => f.Contains("Debug"))).ToList();
-        files = files.Except(files.Where(f => f.Contains("Release"))).ToList();
-        Console.WriteLine("######################################");
+        ClearData();
+        List<string> files = GetCsFiles(_filePath);
         foreach (var file in files)
         {
             var csFile = new CsFile();
@@ -57,15 +52,12 @@ static public class Analyzer
                     }
                     else if (line.StartsWith("namespace "))
                     {
-                        string nameSpaceName = line.Replace("namespace ", "").Trim();
-                        nameSpaceName = nameSpaceName.Replace(";", "").Trim();
-                        nameSpaceName = nameSpaceName.Replace("{", "").Trim();
+                        string nameSpaceName = ExtractNamespace(line);
                         if (!_namespaces.Any(n => n.Name == nameSpaceName))
                         {
                             NamespaceFile ns = new NamespaceFile(nameSpaceName, csFile);
                             _namespaces.Add(ns);
                         }
-
 
                         _namespaces
                             .FirstOrDefault(namespaceFile => namespaceFile.Name == nameSpaceName)?
@@ -80,37 +72,98 @@ static public class Analyzer
         WriteDiagramFile();
     }
 
+    private static string ExtractNamespace(string nameSpaceName)
+    {
+        return nameSpaceName
+            .Replace("namespace ", "")
+            .Replace(";", "")
+            .Replace("{", "")
+            .Trim();
+    }
+
+    private static void ClearData()
+    {
+        _namespaces.Clear();
+        _csFiles.Clear();
+    }
+
+    private static List<string> GetCsFiles(string path)
+    {
+        return Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories)
+            .Where(f => !f.Contains("Debug") && !f.Contains("Release"))
+            .ToList();
+    }
+
     static private void WriteDiagramFile()
     {
-        _umlDiagram.Clear();
-        _umlDiagram.AppendLine("@startuml");
-        _umlDiagram.AppendLine("skinparam linetype ortho");
-        var namespaceNames = new HashSet<string>(_namespaces.Select(n => n.Name));
-        foreach (var namespaceFile in _namespaces)
+        UmlDiagram.Clear();
+        UmlDiagram.AppendLine("@startuml");
+        UmlDiagram.AppendLine("skinparam linetype ortho");
+
+        AddNamespacesToDiagram();
+        AddDependenciesToDiagram();
+
+        UmlDiagram.AppendLine("@enduml");
+        Console.WriteLine(UmlDiagram);
+        SetDiagram(UmlDiagram);
+    }
+
+    private static System.Windows.Media.ImageSource ConvertByteToImage(byte[] imageBytes)
+    {
+        BitmapImage bitmap = new BitmapImage();
+        using (MemoryStream ms = new MemoryStream(imageBytes))
         {
-            _umlDiagram.AppendLine($"namespace {namespaceFile.Name} {{");
-            foreach (var csFile in namespaceFile.CsFiles)
-            {
-                string name = csFile.Name;
-                var indexOfDot = name.IndexOf('.');
-                if (indexOfDot >= 0)
-                {
-                    name = name.Substring(0, indexOfDot);
-                }
-
-                if (name.StartsWith("I"))
-                {
-                    _umlDiagram.AppendLine($"\tinterface \"{name}\"{{}}");
-                }
-                else
-                {
-                    _umlDiagram.AppendLine($"\tclass \"{name}\" {{}}");
-                }
-            }
-
-            _umlDiagram.AppendLine("}");
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = ms;
+            bitmap.EndInit();
+            bitmap.Freeze();
         }
 
+        return bitmap;
+    }
+
+    private static void AddNamespacesToDiagram()
+    {
+        foreach (var namespaceFile in _namespaces)
+        {
+            UmlDiagram.AppendLine($"namespace {namespaceFile.Name} {{");
+            foreach (var csFile in namespaceFile.CsFiles)
+            {
+                AddCsFileToDiagram(csFile);
+            }
+
+            UmlDiagram.AppendLine("}");
+        }
+    }
+
+    private static void AddCsFileToDiagram(CsFile csFile)
+    {
+        string name = csFile.Name;
+        var indexOfDot = name.IndexOf('.');
+        if (indexOfDot >= 0)
+        {
+            name = name.Substring(0, indexOfDot);
+        }
+
+        if (IsIntefrace(name))
+        {
+            UmlDiagram.AppendLine($"\tinterface \"{name}\"{{}}");
+        }
+        else
+        {
+            UmlDiagram.AppendLine($"\tclass \"{name}\" {{}}");
+        }
+    }
+
+    private static bool IsIntefrace(string line)
+    {
+        return line.StartsWith("I") && line.Length > 1 && char.IsUpper(line[1]);
+    }
+
+    private static void AddDependenciesToDiagram()
+    {
+        var namespaceNames = new HashSet<string>(_namespaces.Select(n => n.Name));
         foreach (var namespaceFile in _namespaces)
         {
             foreach (var csFile in namespaceFile.CsFiles)
@@ -119,28 +172,10 @@ static public class Analyzer
                 {
                     if (namespaceNames.Contains(usingFile))
                     {
-                        _umlDiagram.AppendLine($"\"{csFile.Name}\" --> {usingFile}");
+                        UmlDiagram.AppendLine($"\"{csFile.Name}\" --> {usingFile}");
                     }
                 }
             }
-        }
-
-        _umlDiagram.AppendLine("@enduml");
-        Console.WriteLine(_umlDiagram);
-        var imageBytes = GenerateDiagramImage(_umlDiagram.ToString());
-        if (imageBytes != null)
-        {
-            BitmapImage bitmap = new BitmapImage();
-            using (MemoryStream ms = new MemoryStream(imageBytes))
-            {
-                bitmap.BeginInit();
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.StreamSource = ms;
-                bitmap.EndInit();
-                bitmap.Freeze();
-            }
-
-            DiagramImage = bitmap;
         }
     }
 
@@ -151,21 +186,6 @@ static public class Analyzer
         try
         {
             byte[] imageBytes = renderer.Render(plantUmlText, OutputFormat.Png);
-            if (imageBytes != null)
-            {
-                BitmapImage bitmap = new BitmapImage();
-                using (MemoryStream ms = new MemoryStream(imageBytes))
-                {
-                    bitmap.BeginInit();
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmap.StreamSource = ms;
-                    bitmap.EndInit();
-                    bitmap.Freeze();
-                }
-
-                DiagramImage = bitmap;
-            }
-
             return imageBytes;
         }
         catch (Exception e)
@@ -176,9 +196,15 @@ static public class Analyzer
         return null;
     }
 
-    public static void ChangeDiagram(string newDiagram)
+    public static void SetDiagram(StringBuilder newDiagram)
     {
-        _umlDiagram = new StringBuilder(newDiagram);
-        GenerateDiagramImage(_umlDiagram.ToString());
+        UmlDiagram = new StringBuilder(newDiagram.ToString());
+        var imageBytes = GenerateDiagramImage(newDiagram.ToString());
+        DiagramImage = ConvertByteToImage(imageBytes);
+    }
+
+    public static void SetDiagram(string newDiagram)
+    {
+        SetDiagram(new StringBuilder(newDiagram));
     }
 }
