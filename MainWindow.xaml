@@ -16,14 +16,14 @@
                 </MenuItem>
             </Menu>
             <ToolBar Height="50" VerticalAlignment="Top" DockPanel.Dock="Top">
-                <Button>
+                <Button Click="Click" Tag="NewFile">
                     <Image Source="/icons/NewFileIcon.png" ToolTip="Новий файл" />
                 </Button>
                 <Button Click="Click" Tag="OpenProject">
                     <Image Source="/icons/OpenProjectIcon.png" ToolTip="Відкрити проект" />
                 </Button>
-                <Button>
-                    <Image Source="icons/SaveFileIcon.png"></Image>
+                <Button Click="Click" Tag="SaveDiagramText">
+                    <Image Source="icons/SaveFileIcon.png" ToolTip="Зберегти текст діаграми"></Image>
                 </Button>
                 <Separator />
             </ToolBar>

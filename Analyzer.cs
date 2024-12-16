@@ -2,6 +2,7 @@ using PlantUml.Net;
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
@@ -15,7 +16,7 @@ public static class Analyzer
     public static StringBuilder UmlDiagram = new StringBuilder();
     public static System.Windows.Media.ImageSource DiagramImage;
 
-    public static void GetProject()
+    private static void GetProject()
     {
         var openDialog = new OpenFolderDialog() { Title = "Виберіть папку з вашим проектом" };
         if (openDialog.ShowDialog() == true)
@@ -30,6 +31,14 @@ public static class Analyzer
         }
     }
 
+    public static void SetProject(ref ImageSource diagramSource)
+    {
+        GetProject();
+        AnalyzeProject();
+        WriteDiagramFile();
+        SetDiagram(UmlDiagram);
+        diagramSource = DiagramImage;
+    }
     static private void AnalyzeProject()
     {
         ClearData();
@@ -68,8 +77,6 @@ public static class Analyzer
 
             _csFiles.Add(csFile);
         }
-
-        WriteDiagramFile();
     }
 
     private static string ExtractNamespace(string nameSpaceName)
@@ -104,8 +111,7 @@ public static class Analyzer
         AddDependenciesToDiagram();
 
         UmlDiagram.AppendLine("@enduml");
-        Console.WriteLine(UmlDiagram);
-        SetDiagram(UmlDiagram);
+        Console.WriteLine("Diagram has been made:\n" + UmlDiagram);
     }
 
     private static System.Windows.Media.ImageSource ConvertByteToImage(byte[] imageBytes)
@@ -179,7 +185,7 @@ public static class Analyzer
         }
     }
 
-    static public byte[] GenerateDiagramImage(string plantUmlText)
+    static public byte[] GenerateByteDiagramImage(string plantUmlText)
     {
         var rendererFactory = new RendererFactory();
         var renderer = rendererFactory.CreateRenderer();
@@ -199,12 +205,17 @@ public static class Analyzer
     public static void SetDiagram(StringBuilder newDiagram)
     {
         UmlDiagram = new StringBuilder(newDiagram.ToString());
-        var imageBytes = GenerateDiagramImage(newDiagram.ToString());
+        var imageBytes = GenerateByteDiagramImage(newDiagram.ToString());
         DiagramImage = ConvertByteToImage(imageBytes);
     }
 
     public static void SetDiagram(string newDiagram)
     {
         SetDiagram(new StringBuilder(newDiagram));
+    }
+
+    public static string GetDiagram()
+    {
+        return UmlDiagram.ToString();
     }
 }
