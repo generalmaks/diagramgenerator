@@ -23,6 +23,8 @@
       <Resource Include="icons\OpenProjectIcon.png" />
       <Resource Include="icons\SaveFileIcon.png" />
       <None Remove="icons\OpenProjectFolder.png" />
+      <None Remove="icons\SaveImageIcon.png" />
+      <Resource Include="icons\SaveImageIcon.png" />
     </ItemGroup>
 
 </Project>

@@ -26,12 +26,15 @@
                     <Image Source="icons/SaveFileIcon.png" ToolTip="Зберегти текст діаграми"></Image>
                 </Button>
                 <Separator />
+                <Button Click="Click" Tag="SaveImage">
+                    <Image Source="icons/SaveImageIcon.png" ToolTip="Зберегти зображення"></Image>
+                </Button>
             </ToolBar>
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" /> <!-- Top section -->
-                    <ColumnDefinition Width="5" /> <!-- GridSplitter -->
-                    <ColumnDefinition Width="0.5*" /> <!-- Bottom section -->
+                    <ColumnDefinition Width="*" /> 
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="0.5*" />
                 </Grid.ColumnDefinitions>
 
                 <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">

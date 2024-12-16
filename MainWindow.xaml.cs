@@ -21,6 +21,7 @@ public partial class MainWindow : Window
             {"NewFile", Clear},
             { "SaveDiagramText", FileEditor.SaveDiagramFile },
             { "OpenProject", OpenProject },
+            {"SaveImage", FileEditor.SaveImage}
         };
         InitializeComponent();
         ImageViewer.LayoutTransform = _scaleTransform;
