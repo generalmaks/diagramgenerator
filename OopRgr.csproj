@@ -18,13 +18,21 @@
       <None Remove="icons\OpenDiagramText.png" />
       <None Remove="icons\ClearFileIcon.png" />
       <None Remove="icons\NewFileIcon.png" />
-      <Resource Include="icons\NewFileIcon.png" />
+      <Resource Include="icons\NewFileIcon.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
       <None Remove="icons\SaveFileIcon.png" />
-      <Resource Include="icons\OpenProjectIcon.png" />
-      <Resource Include="icons\SaveFileIcon.png" />
+      <Resource Include="icons\OpenProjectIcon.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <Resource Include="icons\SaveFileIcon.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
       <None Remove="icons\OpenProjectFolder.png" />
       <None Remove="icons\SaveImageIcon.png" />
-      <Resource Include="icons\SaveImageIcon.png" />
+      <Resource Include="icons\SaveImageIcon.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
     </ItemGroup>
 
 </Project>
