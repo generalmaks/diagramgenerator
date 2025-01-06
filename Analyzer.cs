@@ -5,7 +5,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using System.Text.RegularExpressions;
-using System.Windows;
 
 namespace DiagramGenerator;
 
@@ -47,39 +46,37 @@ public static class Analyzer
         var files = GetCsFiles(_filePath);
 
         var classRegex = new Regex(
-            @"(?<modifiers>(?:(?:public|private|internal|protected|abstract|sealed|static|partial|new|unsafe)\s+)*)?class\s+(?<className>[a-zA-Z_][a-zA-Z0-9_]*)\s*(?<generic><[^>]+>)?\s*(?::\s*(?<inheritance>(?:[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?(?:\s*,\s*[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?)*))?)?\s*{");
-        var interfaceRegex = new Regex(
-            @"(?<modifiers>(?:(?:public|private|internal|protected|partial|new|unsafe)\s+)*)" +
-            @"interface\s+" +
-            @"(?<interfaceName>[a-zA-Z_][a-zA-Z0-9_]*)" +
-            @"(?<generic><[^>]+>)?\s*" +
-            @"(?::\s*(?<inheritance>(?:[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?(?:\s*,\s*[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?)*))?)?" +
-            @"\s*{");
-        var namespacePattern = new Regex(@"^namespace\s+([\w.]+)");
+            @"(?<modifiers>(?:(?:public|private|internal|protected|abstract|sealed|static|partial|new|unsafe)\s+)*)?class\s+" +
+            @"(?<className>[a-zA-Z_][a-zA-Z0-9_]*)\s*" +
+            @"(?::\s*(?<inheritance>(?:[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*(?:\s*,\s*[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)*))?)?" +
+            @"\s*{",
+            RegexOptions.Compiled);
+        var namespacePattern = new Regex(@"namespace\s+([\w.]+)\s*(?:\{|\;)");
+
         foreach (var file in files)
         {
             var fileText = File.ReadAllText(file);
 
             Match namespaceMatch = namespacePattern.Match(fileText);
             MatchCollection matches = classRegex.Matches(fileText);
-            MatchCollection interfaces = interfaceRegex.Matches(fileText);
-            foreach (Match match in interfaces)
-            {
-                Console.WriteLine(match.Value);
-                Interfaces.Add(match.Value);
-            }
 
             foreach (Match match in matches)
             {
                 Console.WriteLine("================");
-                var classNamespace = namespaceMatch.Value.Replace("namespace", "").Trim();
+                var classNamespace = namespaceMatch.Success ? namespaceMatch.Groups[1].Value : "Unknown";
+                var className = match.Groups["className"].Value.Trim();
+                var classModifiers = match.Groups["modifiers"].Value
+                    .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                    .ToList();
 
-                var className = match.Groups["className"].Value;
-                var classModifiers = match.Groups["modifiers"].ToString().Split(" ").ToList();
-                var classBaseClass = match.Groups["inheritance"].Value;
-                var classInterfaces = match.Groups["interface"].Value.Split(" ").ToList();
+                var inheritanceStr = match.Groups["inheritance"].Value.Trim();
+                var inheritanceList = inheritanceStr.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .ToList();
 
-                classInterfaces = classInterfaces.Select(inter => inter == "" ? "Unknown" : inter).ToList();
+                var classBaseClass = inheritanceList.FirstOrDefault() ?? "";
+                var classInterfaces = inheritanceList.Skip(1).ToList();
+
                 var classInfo = new ClassInfo
                 {
                     Namespace = classNamespace,
@@ -88,26 +85,14 @@ public static class Analyzer
                     BaseClass = classBaseClass,
                     Interfaces = classInterfaces,
                 };
-                if (Namespaces.All(nameSpace => nameSpace.Name != classNamespace))
+                if (!Namespaces.Any(n => n.Name == classNamespace))
                 {
-                    var nameSpace = new NamespaceFile(classNamespace);
-                    Namespaces.Add(nameSpace);
+                    Namespaces.Add(new NamespaceFile(classNamespace));
                 }
 
                 Namespaces
-                    .FirstOrDefault(namespaceFile => namespaceFile.Name == classNamespace)?
+                    .First(n => n.Name == classNamespace)
                     .ClassInfos.Add(classInfo);
-
-                classInfo.Print();
-            }
-        }
-
-        foreach (var nameSpace in Namespaces)
-        {
-            Console.WriteLine(nameSpace.Name);
-            foreach (var classInfo in nameSpace.ClassInfos)
-            {
-                Console.WriteLine($"\t{classInfo.Name}");
             }
         }
 
@@ -145,18 +130,24 @@ public static class Analyzer
                 {
                     UmlDiagram.AppendLine($"    class \"{classInfo.Name}\" {{}}");
                 }
-
-                // Add inheritance relationship
-                if (!string.IsNullOrEmpty(classInfo.BaseClass))
-                {
-                    UmlDiagram.AppendLine($"\"{classInfo.Name}\" --|> \"{classInfo.BaseClass}\"");
-                }
             }
 
             // Close namespace container
             if (!string.IsNullOrEmpty(@namespace.Name))
             {
                 UmlDiagram.AppendLine("}");
+            }
+        }
+
+        foreach (var @namespace in Namespaces)
+        {
+            foreach (var classInfo in @namespace.ClassInfos)
+            {
+                // Add inheritance relationship
+                if (!string.IsNullOrEmpty(classInfo.BaseClass))
+                {
+                    UmlDiagram.AppendLine($"\"{classInfo.Name}\" --|> \"{classInfo.BaseClass}\"");
+                }
             }
         }
 
