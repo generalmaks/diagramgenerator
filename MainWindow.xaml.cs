@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace OopRgr;
+namespace DiagramGenerator;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml

@@ -1,7 +1,7 @@
-﻿<Application x:Class="OopRgr.App"
+﻿<Application x:Class="DiagramGenerator.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:OopRgr"
+             xmlns:local="clr-namespace:DiagramGenerator"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          

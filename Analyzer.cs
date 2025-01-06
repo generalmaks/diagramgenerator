@@ -7,14 +7,15 @@ using Microsoft.Win32;
 using System.Text.RegularExpressions;
 using System.Windows;
 
-namespace OopRgr;
+namespace DiagramGenerator;
 
 public static class Analyzer
 {
     private static string? _filePath;
     private static readonly List<NamespaceFile> Namespaces = new List<NamespaceFile>();
-    private static readonly List<CsFile> _csFiles = new List<CsFile>();
+    private static readonly List<CsFile> CsFiles = new List<CsFile>();
     private static readonly List<ClassInfo> Classes = new List<ClassInfo>();
+    private static readonly List<string> Interfaces = new List<string>();
     public static StringBuilder UmlDiagram = new StringBuilder();
     public static ImageSource DiagramImage;
 
@@ -25,7 +26,6 @@ public static class Analyzer
         {
             _filePath = openDialog.FolderName;
             Console.WriteLine($"Opened from {_filePath}");
-            MessageBox.Show($"Відкрито папку {_filePath}");
         }
         else
         {
@@ -46,55 +46,126 @@ public static class Analyzer
         ClearData();
         var files = GetCsFiles(_filePath);
 
-        const string classPattern =
-            @"(?<modifiers>(?:(?:public|private|internal|protected|abstract|sealed|static|partial|new|unsafe)\s+)*)?class\s+(?<className>[a-zA-Z_][a-zA-Z0-9_]*)\s*(?<generic><[^>]+>)?\s*(?::\s*(?<inheritance>(?:[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?(?:\s*,\s*[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?)*))?)?\s*{";
+        var classRegex = new Regex(
+            @"(?<modifiers>(?:(?:public|private|internal|protected|abstract|sealed|static|partial|new|unsafe)\s+)*)?class\s+(?<className>[a-zA-Z_][a-zA-Z0-9_]*)\s*(?<generic><[^>]+>)?\s*(?::\s*(?<inheritance>(?:[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?(?:\s*,\s*[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?)*))?)?\s*{");
+        var interfaceRegex = new Regex(
+            @"(?<modifiers>(?:(?:public|private|internal|protected|partial|new|unsafe)\s+)*)" +
+            @"interface\s+" +
+            @"(?<interfaceName>[a-zA-Z_][a-zA-Z0-9_]*)" +
+            @"(?<generic><[^>]+>)?\s*" +
+            @"(?::\s*(?<inheritance>(?:[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?(?:\s*,\s*[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?)*))?)?" +
+            @"\s*{");
+        var namespacePattern = new Regex(@"^namespace\s+([\w.]+)");
         foreach (var file in files)
         {
-            var matches = Regex.Matches(File.ReadAllText(file), classPattern, RegexOptions.Multiline);
+            var fileText = File.ReadAllText(file);
+
+            Match namespaceMatch = namespacePattern.Match(fileText);
+            MatchCollection matches = classRegex.Matches(fileText);
+            MatchCollection interfaces = interfaceRegex.Matches(fileText);
+            foreach (Match match in interfaces)
+            {
+                Console.WriteLine(match.Value);
+                Interfaces.Add(match.Value);
+            }
+
             foreach (Match match in matches)
             {
+                Console.WriteLine("================");
+                var classNamespace = namespaceMatch.Value.Replace("namespace", "").Trim();
+
+                var className = match.Groups["className"].Value;
+                var classModifiers = match.Groups["modifiers"].ToString().Split(" ").ToList();
+                var classBaseClass = match.Groups["inheritance"].Value;
+                var classInterfaces = match.Groups["interface"].Value.Split(" ").ToList();
+
+                classInterfaces = classInterfaces.Select(inter => inter == "" ? "Unknown" : inter).ToList();
                 var classInfo = new ClassInfo
                 {
-                    ClassName = match.Groups["className"].Value,
-                    FullDeclaration = match.Value.Trim(),
-                    GenericParameters = match.Groups["generic"].Value
+                    Namespace = classNamespace,
+                    Name = className,
+                    Modifiers = classModifiers,
+                    BaseClass = classBaseClass,
+                    Interfaces = classInterfaces,
                 };
-
-                var modifiersStr = match.Groups["modifiers"].Value.ToLower();
-                classInfo.Modifiers.IsPublic = modifiersStr.Contains("public");
-                classInfo.Modifiers.IsPrivate = modifiersStr.Contains("private");
-                classInfo.Modifiers.IsInternal = modifiersStr.Contains("internal");
-                classInfo.Modifiers.IsProtected = modifiersStr.Contains("protected");
-                classInfo.Modifiers.IsAbstract = modifiersStr.Contains("abstract");
-                classInfo.Modifiers.IsSealed = modifiersStr.Contains("sealed");
-                classInfo.Modifiers.IsStatic = modifiersStr.Contains("static");
-                classInfo.Modifiers.IsPartial = modifiersStr.Contains("partial");
-                classInfo.Modifiers.IsNew = modifiersStr.Contains("new");
-                classInfo.Modifiers.IsUnsafe = modifiersStr.Contains("unsafe");
-
-                var inheritance = match.Groups["inheritance"].Value;
-                if (!string.IsNullOrEmpty(inheritance))
+                if (Namespaces.All(nameSpace => nameSpace.Name != classNamespace))
                 {
-                    var inheritedTypes = inheritance.Split(',')
-                        .Select(t => t.Trim())
-                        .Where(t => !string.IsNullOrEmpty(t))
-                        .ToList();
-
-                    if (inheritedTypes.Any())
-                    {
-                        if (!inheritedTypes[0].StartsWith("I"))
-                        {
-                            classInfo.BaseClass = inheritedTypes[0];
-                            inheritedTypes.RemoveAt(0);
-                        }
-
-                        classInfo.Interfaces.AddRange(inheritedTypes);
-                    }
+                    var nameSpace = new NamespaceFile(classNamespace);
+                    Namespaces.Add(nameSpace);
                 }
-                Console.WriteLine($"Class: {classInfo}");
-                Classes.Add(classInfo);
+
+                Namespaces
+                    .FirstOrDefault(namespaceFile => namespaceFile.Name == classNamespace)?
+                    .ClassInfos.Add(classInfo);
+
+                classInfo.Print();
             }
         }
+
+        foreach (var nameSpace in Namespaces)
+        {
+            Console.WriteLine(nameSpace.Name);
+            foreach (var classInfo in nameSpace.ClassInfos)
+            {
+                Console.WriteLine($"\t{classInfo.Name}");
+            }
+        }
+
+        BuildHierarchyDiagram(ref diagramSource);
+    }
+
+    static private void BuildHierarchyDiagram(ref ImageSource diagramSource)
+    {
+        UmlDiagram.Clear();
+        UmlDiagram.AppendLine("@startuml");
+        UmlDiagram.AppendLine("skinparam linetype ortho");
+
+        foreach (var @namespace in Namespaces)
+        {
+            if (!string.IsNullOrEmpty(@namespace.Name))
+            {
+                UmlDiagram.AppendLine($"namespace {@namespace.Name} {{");
+            }
+
+            foreach (var classInfo in @namespace.ClassInfos)
+            {
+                // Build modifier string
+                string modifiers = string.Join(" ", classInfo.Modifiers);
+
+                // Add class definition
+                if (modifiers.Contains("abstract"))
+                {
+                    UmlDiagram.AppendLine($"    abstract class \"{classInfo.Name}\" {{}}");
+                }
+                else if (modifiers.Contains("static"))
+                {
+                    UmlDiagram.AppendLine($"    class \"{classInfo.Name}\" <<static>> {{}}");
+                }
+                else
+                {
+                    UmlDiagram.AppendLine($"    class \"{classInfo.Name}\" {{}}");
+                }
+
+                // Add inheritance relationship
+                if (!string.IsNullOrEmpty(classInfo.BaseClass))
+                {
+                    UmlDiagram.AppendLine($"\"{classInfo.Name}\" --|> \"{classInfo.BaseClass}\"");
+                }
+            }
+
+            // Close namespace container
+            if (!string.IsNullOrEmpty(@namespace.Name))
+            {
+                UmlDiagram.AppendLine("}");
+            }
+        }
+
+        UmlDiagram.AppendLine("@enduml");
+        Console.WriteLine(UmlDiagram.ToString());
+
+        var imageBytes = GenerateByteDiagramImage(UmlDiagram.ToString());
+        diagramSource = ConvertByteToImage(imageBytes);
+        DiagramImage = diagramSource;
     }
 
     static public void AnalyzeProjectComponents()
@@ -130,14 +201,15 @@ public static class Analyzer
                     .CsFiles.Add(csFile);
             }
 
-            _csFiles.Add(csFile);
+            CsFiles.Add(csFile);
         }
     }
 
     private static void ClearData()
     {
         Namespaces.Clear();
-        _csFiles.Clear();
+        CsFiles.Clear();
+        Classes.Clear();
     }
 
     private static List<string> GetCsFiles(string? path)

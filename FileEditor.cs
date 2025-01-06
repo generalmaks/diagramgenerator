@@ -2,7 +2,7 @@ using System.IO;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
-namespace OopRgr;
+namespace DiagramGenerator;
 
 public static class FileEditor
 {

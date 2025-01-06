@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace OopRgr;
+namespace DiagramGenerator;
 
 /// <summary>
 /// Interaction logic for App.xaml

@@ -1,4 +1,4 @@
-namespace OopRgr;
+namespace DiagramGenerator;
 
 public class CsFile
 {

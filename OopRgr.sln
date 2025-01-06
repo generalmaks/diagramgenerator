@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OopRgr", "OopRgr.csproj", "{B32DDB48-94DC-42F0-82AA-91018D5B0BCF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagramGenerator", "DiagramGenerator.csproj", "{B32DDB48-94DC-42F0-82AA-91018D5B0BCF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
