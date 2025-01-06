@@ -18,10 +18,11 @@ public partial class MainWindow : Window
     {
         _buttonActions = new Dictionary<string, Action>()
         {
-            {"NewFile", Clear},
+            { "NewFile", Clear },
             { "SaveDiagramText", FileEditor.SaveDiagramFile },
             { "OpenProject", OpenProject },
-            {"SaveImage", FileEditor.SaveImage}
+            { "SaveImage", FileEditor.SaveImage },
+            { "AnalyzeComponents", AnalyzeProjectComponents }
         };
         InitializeComponent();
         ImageViewer.LayoutTransform = _scaleTransform;
@@ -45,14 +46,7 @@ public partial class MainWindow : Window
     {
         if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
         {
-            if (e.Delta > 0)
-            {
-                ScaleImage(1.1);
-            }
-            else
-            {
-                ScaleImage(0.9);
-            }
+            ScaleImage(e.Delta > 0 ? 1.1 : 0.9);
 
             e.Handled = true;
         }
@@ -72,8 +66,13 @@ public partial class MainWindow : Window
 
     private void OpenProject()
     {
+        Analyzer.GetProject();
+    }
+
+    private void AnalyzeProjectComponents()
+    {
         var image = ImageViewer.Source;
-        Analyzer.SetProject(ref image);
+        Analyzer.CreateHierarchyDiagram(ref image);
         ImageViewer.Source = image;
         DiagramTextBox.Text = Analyzer.UmlDiagram.ToString();
     }

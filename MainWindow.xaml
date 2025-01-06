@@ -26,6 +26,9 @@
                     <Image Source="icons/SaveFileIcon.png" ToolTip="Зберегти текст діаграми"></Image>
                 </Button>
                 <Separator />
+                <Button Click="Click" Tag="AnalyzeComponents">
+                    <Image Source="icons/ComponentDiagramIcon.png" ToolTip="Аналізувати компоненти програми"/>
+                </Button>
                 <Button Click="Click" Tag="SaveImage">
                     <Image Source="icons/SaveImageIcon.png" ToolTip="Зберегти зображення"></Image>
                 </Button>

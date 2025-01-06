@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using System.Text.RegularExpressions;
+using System.Windows;
 
 namespace OopRgr;
 
@@ -13,17 +14,18 @@ public static class Analyzer
     private static string? _filePath;
     private static readonly List<NamespaceFile> Namespaces = new List<NamespaceFile>();
     private static readonly List<CsFile> _csFiles = new List<CsFile>();
+    private static readonly List<ClassInfo> Classes = new List<ClassInfo>();
     public static StringBuilder UmlDiagram = new StringBuilder();
     public static ImageSource DiagramImage;
 
-    private static void GetProject()
+    public static void GetProject()
     {
         var openDialog = new OpenFolderDialog() { Title = "Виберіть папку з вашим проектом" };
         if (openDialog.ShowDialog() == true)
         {
             _filePath = openDialog.FolderName;
             Console.WriteLine($"Opened from {_filePath}");
-            AnalyzeProject();
+            MessageBox.Show($"Відкрито папку {_filePath}");
         }
         else
         {
@@ -31,22 +33,77 @@ public static class Analyzer
         }
     }
 
-    public static void SetProject(ref ImageSource diagramSource)
+    public static void CreateComponentsDiagram(ref ImageSource diagramSource)
     {
-        GetProject();
-        AnalyzeProject();
+        AnalyzeProjectComponents();
         WriteDiagramFile();
         SetDiagram(UmlDiagram);
         diagramSource = DiagramImage;
     }
 
-    static private void AnalyzeProject()
+    public static void CreateHierarchyDiagram(ref ImageSource diagramSource)
     {
         ClearData();
-        List<string> files = GetCsFiles(_filePath);
+        var files = GetCsFiles(_filePath);
 
-        string usingPattern = @"^using\s+([\w.]+);";
-        string namespacePattern = @"^namespace\s+([\w.]+)";
+        const string classPattern =
+            @"(?<modifiers>(?:(?:public|private|internal|protected|abstract|sealed|static|partial|new|unsafe)\s+)*)?class\s+(?<className>[a-zA-Z_][a-zA-Z0-9_]*)\s*(?<generic><[^>]+>)?\s*(?::\s*(?<inheritance>(?:[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?(?:\s*,\s*[a-zA-Z_][a-zA-Z0-9_]*(?:<[^>]+>)?)*))?)?\s*{";
+        foreach (var file in files)
+        {
+            var matches = Regex.Matches(File.ReadAllText(file), classPattern, RegexOptions.Multiline);
+            foreach (Match match in matches)
+            {
+                var classInfo = new ClassInfo
+                {
+                    ClassName = match.Groups["className"].Value,
+                    FullDeclaration = match.Value.Trim(),
+                    GenericParameters = match.Groups["generic"].Value
+                };
+
+                var modifiersStr = match.Groups["modifiers"].Value.ToLower();
+                classInfo.Modifiers.IsPublic = modifiersStr.Contains("public");
+                classInfo.Modifiers.IsPrivate = modifiersStr.Contains("private");
+                classInfo.Modifiers.IsInternal = modifiersStr.Contains("internal");
+                classInfo.Modifiers.IsProtected = modifiersStr.Contains("protected");
+                classInfo.Modifiers.IsAbstract = modifiersStr.Contains("abstract");
+                classInfo.Modifiers.IsSealed = modifiersStr.Contains("sealed");
+                classInfo.Modifiers.IsStatic = modifiersStr.Contains("static");
+                classInfo.Modifiers.IsPartial = modifiersStr.Contains("partial");
+                classInfo.Modifiers.IsNew = modifiersStr.Contains("new");
+                classInfo.Modifiers.IsUnsafe = modifiersStr.Contains("unsafe");
+
+                var inheritance = match.Groups["inheritance"].Value;
+                if (!string.IsNullOrEmpty(inheritance))
+                {
+                    var inheritedTypes = inheritance.Split(',')
+                        .Select(t => t.Trim())
+                        .Where(t => !string.IsNullOrEmpty(t))
+                        .ToList();
+
+                    if (inheritedTypes.Any())
+                    {
+                        if (!inheritedTypes[0].StartsWith("I"))
+                        {
+                            classInfo.BaseClass = inheritedTypes[0];
+                            inheritedTypes.RemoveAt(0);
+                        }
+
+                        classInfo.Interfaces.AddRange(inheritedTypes);
+                    }
+                }
+                Console.WriteLine($"Class: {classInfo}");
+                Classes.Add(classInfo);
+            }
+        }
+    }
+
+    static public void AnalyzeProjectComponents()
+    {
+        ClearData();
+        var files = GetCsFiles(_filePath);
+
+        const string usingPattern = @"^using\s+([\w.]+);";
+        const string namespacePattern = @"^namespace\s+([\w.]+)";
         foreach (var file in files)
         {
             var csFile = new CsFile();

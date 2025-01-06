@@ -33,6 +33,10 @@
       <Resource Include="icons\SaveImageIcon.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
+      <None Remove="icons\ComponentDiagramIcon.png" />
+      <Resource Include="icons\ComponentDiagramIcon.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
     </ItemGroup>
 
 </Project>
