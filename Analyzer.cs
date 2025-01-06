@@ -5,6 +5,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace DiagramGenerator;
 
@@ -45,58 +48,116 @@ public static class Analyzer
         ClearData();
         var files = GetCsFiles(_filePath);
 
-        var classRegex = new Regex(
-            @"(?<modifiers>(?:(?:public|private|internal|protected|abstract|sealed|static|partial|new|unsafe)\s+)*)?class\s+" +
-            @"(?<className>[a-zA-Z_][a-zA-Z0-9_]*)\s*" +
-            @"(?::\s*(?<inheritance>(?:[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*(?:\s*,\s*[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)*))?)?" +
-            @"\s*{",
-            RegexOptions.Compiled);
-        var namespacePattern = new Regex(@"namespace\s+([\w.]+)\s*(?:\{|\;)");
-
         foreach (var file in files)
         {
             var fileText = File.ReadAllText(file);
 
-            Match namespaceMatch = namespacePattern.Match(fileText);
-            MatchCollection matches = classRegex.Matches(fileText);
-
-            foreach (Match match in matches)
+            var syntaxTree = CSharpSyntaxTree.ParseText(fileText);
+            var root = syntaxTree.GetRoot();
+            var classDeclarations = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
+            foreach (var classDeclaration in classDeclarations)
             {
-                Console.WriteLine("================");
-                var classNamespace = namespaceMatch.Success ? namespaceMatch.Groups[1].Value : "Unknown";
-                var className = match.Groups["className"].Value.Trim();
-                var classModifiers = match.Groups["modifiers"].Value
-                    .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                    .ToList();
+                var Class = new ClassInfo();
+                Console.WriteLine("=== Class Analysis ===");
 
-                var inheritanceStr = match.Groups["inheritance"].Value.Trim();
-                var inheritanceList = inheritanceStr.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(x => x.Trim())
-                    .ToList();
+                Class.Name = classDeclaration.Identifier.Text;
+                Console.WriteLine($"Class Name: {classDeclaration.Identifier.Text}");
 
-                var classBaseClass = inheritanceList.FirstOrDefault() ?? "";
-                var classInterfaces = inheritanceList.Skip(1).ToList();
 
-                var classInfo = new ClassInfo
+                var compilatedRoot = syntaxTree.GetCompilationUnitRoot();
+                var namespaceDeclarations = root.DescendantNodes()
+                    .OfType<FileScopedNamespaceDeclarationSyntax>();
+                Class.Namespace = namespaceDeclarations.FirstOrDefault()?.Name.ToString() ?? string.Empty;
+                Console.WriteLine($"Namespace: {Class.Namespace}");
+
+                if (classDeclaration.BaseList != null)
                 {
-                    Namespace = classNamespace,
-                    Name = className,
-                    Modifiers = classModifiers,
-                    BaseClass = classBaseClass,
-                    Interfaces = classInterfaces,
-                };
-                if (!Namespaces.Any(n => n.Name == classNamespace))
+                    var baseTypes = classDeclaration.BaseList.Types
+                        .Select(t => t.ToString());
+                    foreach (var baseType in baseTypes)
+                    {
+                        if (baseType.StartsWith("I"))
+                            Class.Interfaces.Add(baseType);
+                        else
+                            Class.BaseClass = baseType;
+                    }
+
+                    Console.WriteLine("Base Classes/Interfaces: " + string.Join(", ", baseTypes));
+                }
+                else
                 {
-                    Namespaces.Add(new NamespaceFile(classNamespace));
+                    Console.WriteLine("Base Classes/Interfaces: None");
                 }
 
-                Namespaces
-                    .First(n => n.Name == classNamespace)
-                    .ClassInfos.Add(classInfo);
+                Console.WriteLine("Fields:");
+                foreach (var field in classDeclaration.Members.OfType<FieldDeclarationSyntax>())
+                {
+                    var fieldType = field.Declaration.Type;
+                    foreach (var variable in field.Declaration.Variables)
+                    {
+                        Class.Properties.Add(variable.Identifier.Text);
+                        Console.WriteLine($"  Name: {variable.Identifier.Text}, Type: {fieldType}");
+                    }
+                }
+
+                Console.WriteLine("Properties:");
+                foreach (var property in classDeclaration.Members.OfType<PropertyDeclarationSyntax>())
+                {
+                    Class.Properties.Add(property.Identifier.Text);
+                    Console.WriteLine($"  Name: {property.Identifier.Text}, Type: {property.Type}");
+                }
+
+                Console.WriteLine("Methods:");
+                foreach (var method in classDeclaration.Members.OfType<MethodDeclarationSyntax>())
+                {
+                    var parameters = string.Join(", ", method.ParameterList.Parameters
+                        .Select(p => $"{p.Type} {p.Identifier.Text}"));
+                    Class.Methods.Add($"{method.ReturnType} {method.Identifier.Text} ({parameters})");
+                    Console.WriteLine(
+                        $"  Name: {method.Identifier.Text}, Return Type: {method.ReturnType}, Parameters: ({parameters})");
+                }
+
+                Console.WriteLine("Constructors:");
+                foreach (var constructor in classDeclaration.Members.OfType<ConstructorDeclarationSyntax>())
+                {
+                    var parameters = string.Join(", ", constructor.ParameterList.Parameters
+                        .Select(p => $"{p.Type} {p.Identifier.Text}"));
+                    Class.Constructors.Add($"{constructor.Modifiers} {constructor.Identifier.Text} {parameters}");
+                    Console.WriteLine($"  Name: {constructor.Identifier.Text}, Parameters: ({parameters})");
+                }
+
+                Classes.Add(Class);
             }
         }
 
+        foreach (var @class in Classes)
+        {
+            @class.Print();
+        }
+
+        ExtractNamespaces();
+        foreach (var name in Namespaces)
+        {
+            Console.WriteLine(name.Name);
+        }
+
         BuildHierarchyDiagram(ref diagramSource);
+    }
+
+    static private void ExtractNamespaces()
+    {
+        foreach (var @class in Classes)
+        {
+            var classNamespace = @class.Namespace;
+            if (Namespaces.All(n => n.Name != classNamespace))
+            {
+                Namespaces.Add(new NamespaceFile(classNamespace));
+            }
+
+            Namespaces
+                .First(n => n.Name == classNamespace)
+                .ClassInfos.Add(@class);
+        }
     }
 
     static private void BuildHierarchyDiagram(ref ImageSource diagramSource)
