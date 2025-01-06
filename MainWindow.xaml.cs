@@ -22,7 +22,8 @@ public partial class MainWindow : Window
             { "SaveDiagramText", FileEditor.SaveDiagramFile },
             { "OpenProject", OpenProject },
             { "SaveImage", FileEditor.SaveImage },
-            { "AnalyzeComponents", AnalyzeProjectComponents }
+            { "BuildComponentsDiagram", AnalyzeProjectComponents },
+            {"BuildHierarchyDiagram", BuildHierarchyDiagram}
         };
         InitializeComponent();
         ImageViewer.LayoutTransform = _scaleTransform;
@@ -70,6 +71,14 @@ public partial class MainWindow : Window
     }
 
     private void AnalyzeProjectComponents()
+    {
+        var image = ImageViewer.Source;
+        Analyzer.CreateComponentsDiagram(ref image);
+        ImageViewer.Source = image;
+        DiagramTextBox.Text = Analyzer.UmlDiagram.ToString();
+    }
+
+    private void BuildHierarchyDiagram()
     {
         var image = ImageViewer.Source;
         Analyzer.CreateHierarchyDiagram(ref image);

@@ -14,6 +14,9 @@
                     <MenuItem Header="Відкрити файл" Tag="OpenFile" />
                     <MenuItem Header="Відкрити проект" Tag="OpenProject" Click="Click" />
                 </MenuItem>
+                <MenuItem Header="Налаштування">
+                    <CheckBox Content="Включати свойства в програму"/>
+                </MenuItem>
             </Menu>
             <ToolBar Height="50" VerticalAlignment="Top" DockPanel.Dock="Top">
                 <Button Click="Click" Tag="NewFile">
@@ -26,8 +29,11 @@
                     <Image Source="icons/SaveFileIcon.png" ToolTip="Зберегти текст діаграми"></Image>
                 </Button>
                 <Separator />
-                <Button Click="Click" Tag="AnalyzeComponents">
-                    <Image Source="icons/ComponentDiagramIcon.png" ToolTip="Аналізувати компоненти програми"/>
+                <Button Click="Click" Tag="BuildHierarchyDiagram">
+                    <Image Source="icons/HierarchyDiagramIcon.png" ToolTip="Збудувати діаграму ієрархії наслідування"></Image>
+                </Button>
+                <Button Click="Click" Tag="BuildComponentsDiagram">
+                    <Image Source="icons/ComponentDiagramIcon.png" ToolTip="Збудувати діаграми компонентів"/>
                 </Button>
                 <Button Click="Click" Tag="SaveImage">
                     <Image Source="icons/SaveImageIcon.png" ToolTip="Зберегти зображення"></Image>

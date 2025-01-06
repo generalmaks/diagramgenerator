@@ -112,7 +112,7 @@ public static class Analyzer
                 {
                     var parameters = string.Join(", ", method.ParameterList.Parameters
                         .Select(p => $"{p.Type} {p.Identifier.Text}"));
-                    Class.Methods.Add($"{method.ReturnType} {method.Identifier.Text} ({parameters})");
+                    Class.Methods.Add($"{method.ReturnType} {method.Identifier.Text}");
                     Console.WriteLine(
                         $"  Name: {method.Identifier.Text}, Return Type: {method.ReturnType}, Parameters: ({parameters})");
                 }
@@ -181,17 +181,29 @@ public static class Analyzer
                 // Add class definition
                 if (modifiers.Contains("abstract"))
                 {
-                    UmlDiagram.AppendLine($"    abstract class \"{classInfo.Name}\" {{}}");
+                    UmlDiagram.AppendLine($"    abstract class \"{classInfo.Name}\" {{");
                 }
                 else if (modifiers.Contains("static"))
                 {
-                    UmlDiagram.AppendLine($"    class \"{classInfo.Name}\" <<static>> {{}}");
+                    UmlDiagram.AppendLine($"    class \"{classInfo.Name}\" <<static>> {{");
                 }
                 else
                 {
-                    UmlDiagram.AppendLine($"    class \"{classInfo.Name}\" {{}}");
+                    UmlDiagram.AppendLine($"    class \"{classInfo.Name}\" {{");
                 }
+
+                foreach (var property in classInfo.Properties)
+                {
+                    UmlDiagram.AppendLine("     " + property);
+                }
+
+                foreach (var method in classInfo.Methods)
+                {
+                    UmlDiagram.AppendLine("    " + method);
+                }
+                UmlDiagram.AppendLine("}");
             }
+            
 
             // Close namespace container
             if (!string.IsNullOrEmpty(@namespace.Name))

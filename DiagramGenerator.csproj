@@ -38,6 +38,10 @@
       <Resource Include="icons\ComponentDiagramIcon.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
+      <None Remove="icons\HierarchyDiagramIcon.png" />
+      <Resource Include="icons\HierarchyDiagramIcon.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
     </ItemGroup>
 
 </Project>
