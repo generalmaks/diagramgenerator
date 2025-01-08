@@ -10,9 +10,9 @@ namespace DiagramGenerator;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private ScaleTransform _scaleTransform = new ScaleTransform();
+    private readonly ScaleTransform _scaleTransform = new ScaleTransform();
 
-    private Dictionary<string, Action> _buttonActions;
+    private readonly Dictionary<string, Action> _buttonActions;
 
     public MainWindow()
     {
@@ -23,7 +23,7 @@ public partial class MainWindow : Window
             { "OpenProject", OpenProject },
             { "SaveImage", FileEditor.SaveImage },
             { "BuildComponentsDiagram", AnalyzeProjectComponents },
-            {"BuildHierarchyDiagram", BuildHierarchyDiagram}
+            { "BuildHierarchyDiagram", BuildHierarchyDiagram }
         };
         InitializeComponent();
         ImageViewer.LayoutTransform = _scaleTransform;

@@ -26,17 +26,20 @@
                     <Image Source="/icons/OpenProjectIcon.png" ToolTip="Відкрити проект" />
                 </Button>
                 <Button Click="Click" Tag="SaveDiagramText">
-                    <Image Source="icons/SaveFileIcon.png" ToolTip="Зберегти текст діаграми"></Image>
+                    <Image Source="icons/SaveFileIcon.png" ToolTip="Зберегти текст діаграми"/>
                 </Button>
                 <Separator />
                 <Button Click="Click" Tag="BuildHierarchyDiagram">
-                    <Image Source="icons/HierarchyDiagramIcon.png" ToolTip="Збудувати діаграму ієрархії наслідування"></Image>
+                    <Image Source="icons/HierarchyDiagramIcon.png" ToolTip="Збудувати діаграму ієрархії наслідування"/>
                 </Button>
                 <Button Click="Click" Tag="BuildComponentsDiagram">
                     <Image Source="icons/ComponentDiagramIcon.png" ToolTip="Збудувати діаграми компонентів"/>
                 </Button>
+                <Button Click="Click" Tag="OpenSettings">
+                    <Image Source="icons/SettingsIcon.png" ToolTip="Показати налаштування"/>
+                </Button>
                 <Button Click="Click" Tag="SaveImage">
-                    <Image Source="icons/SaveImageIcon.png" ToolTip="Зберегти зображення"></Image>
+                    <Image Source="icons/SaveImageIcon.png" ToolTip="Зберегти зображення"/>
                 </Button>
             </ToolBar>
             <Grid>

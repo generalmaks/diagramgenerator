@@ -39,6 +39,11 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
       <None Remove="icons\HierarchyDiagramIcon.png" />
+      <None Remove="icons\SettingsIcon.png" />
+      <Resource Include="icons\SettingsIcon.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="icons\HierarchyDiagram.png" />
       <Resource Include="icons\HierarchyDiagramIcon.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
