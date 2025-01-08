@@ -14,9 +14,9 @@ namespace DiagramGenerator;
 public static class Analyzer
 {
     private static string? _filePath;
+    public static readonly List<ClassInfo> Classes = new List<ClassInfo>();
     private static readonly List<NamespaceFile> Namespaces = new List<NamespaceFile>();
     private static readonly List<CsFile> CsFiles = new List<CsFile>();
-    private static readonly List<ClassInfo> Classes = new List<ClassInfo>();
     private static readonly List<string> Interfaces = new List<string>();
     public static StringBuilder UmlDiagram = new StringBuilder();
     public static ImageSource DiagramImage;
@@ -43,199 +43,11 @@ public static class Analyzer
         diagramSource = DiagramImage;
     }
 
-    public static void CreateHierarchyDiagram(ref ImageSource diagramSource)
-    {
-        ClearData();
-        var files = GetCsFiles(_filePath);
-
-        foreach (var file in files)
-        {
-            var fileText = File.ReadAllText(file);
-
-            var syntaxTree = CSharpSyntaxTree.ParseText(fileText);
-            var root = syntaxTree.GetRoot();
-            var classDeclarations = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
-            foreach (var classDeclaration in classDeclarations)
-            {
-                var Class = new ClassInfo();
-                Console.WriteLine("=== Class Analysis ===");
-
-                Class.Name = classDeclaration.Identifier.Text;
-                Console.WriteLine($"Class Name: {classDeclaration.Identifier.Text}");
-
-
-                var compilatedRoot = syntaxTree.GetCompilationUnitRoot();
-                var namespaceDeclarations = root.DescendantNodes()
-                    .OfType<FileScopedNamespaceDeclarationSyntax>();
-                Class.Namespace = namespaceDeclarations.FirstOrDefault()?.Name.ToString() ?? string.Empty;
-                Console.WriteLine($"Namespace: {Class.Namespace}");
-
-                if (classDeclaration.BaseList != null)
-                {
-                    var baseTypes = classDeclaration.BaseList.Types
-                        .Select(t => t.ToString());
-                    foreach (var baseType in baseTypes)
-                    {
-                        if (baseType.StartsWith("I"))
-                            Class.Interfaces.Add(baseType);
-                        else
-                            Class.BaseClass = baseType;
-                    }
-
-                    Console.WriteLine("Base Classes/Interfaces: " + string.Join(", ", baseTypes));
-                }
-                else
-                {
-                    Console.WriteLine("Base Classes/Interfaces: None");
-                }
-
-                Console.WriteLine("Fields:");
-                foreach (var field in classDeclaration.Members.OfType<FieldDeclarationSyntax>())
-                {
-                    var fieldType = field.Declaration.Type;
-                    foreach (var variable in field.Declaration.Variables)
-                    {
-                        Class.Properties.Add(variable.Identifier.Text);
-                        Console.WriteLine($"  Name: {variable.Identifier.Text}, Type: {fieldType}");
-                    }
-                }
-
-                Console.WriteLine("Properties:");
-                foreach (var property in classDeclaration.Members.OfType<PropertyDeclarationSyntax>())
-                {
-                    Class.Properties.Add(property.Identifier.Text);
-                    Console.WriteLine($"  Name: {property.Identifier.Text}, Type: {property.Type}");
-                }
-
-                Console.WriteLine("Methods:");
-                foreach (var method in classDeclaration.Members.OfType<MethodDeclarationSyntax>())
-                {
-                    var parameters = string.Join(", ", method.ParameterList.Parameters
-                        .Select(p => $"{p.Type} {p.Identifier.Text}"));
-                    Class.Methods.Add($"{method.ReturnType} {method.Identifier.Text}");
-                    Console.WriteLine(
-                        $"  Name: {method.Identifier.Text}, Return Type: {method.ReturnType}, Parameters: ({parameters})");
-                }
-
-                Console.WriteLine("Constructors:");
-                foreach (var constructor in classDeclaration.Members.OfType<ConstructorDeclarationSyntax>())
-                {
-                    var parameters = string.Join(", ", constructor.ParameterList.Parameters
-                        .Select(p => $"{p.Type} {p.Identifier.Text}"));
-                    Class.Constructors.Add($"{constructor.Modifiers} {constructor.Identifier.Text} {parameters}");
-                    Console.WriteLine($"  Name: {constructor.Identifier.Text}, Parameters: ({parameters})");
-                }
-
-                Classes.Add(Class);
-            }
-        }
-
-        foreach (var @class in Classes)
-        {
-            @class.Print();
-        }
-
-        ExtractNamespaces();
-        foreach (var name in Namespaces)
-        {
-            Console.WriteLine(name.Name);
-        }
-
-        BuildHierarchyDiagram(ref diagramSource);
-    }
-
-    static private void ExtractNamespaces()
-    {
-        foreach (var @class in Classes)
-        {
-            var classNamespace = @class.Namespace;
-            if (Namespaces.All(n => n.Name != classNamespace))
-            {
-                Namespaces.Add(new NamespaceFile(classNamespace));
-            }
-
-            Namespaces
-                .First(n => n.Name == classNamespace)
-                .ClassInfos.Add(@class);
-        }
-    }
-
-    static private void BuildHierarchyDiagram(ref ImageSource diagramSource)
-    {
-        UmlDiagram.Clear();
-        UmlDiagram.AppendLine("@startuml");
-        UmlDiagram.AppendLine("skinparam linetype ortho");
-
-        foreach (var @namespace in Namespaces)
-        {
-            if (!string.IsNullOrEmpty(@namespace.Name))
-            {
-                UmlDiagram.AppendLine($"namespace {@namespace.Name} {{");
-            }
-
-            foreach (var classInfo in @namespace.ClassInfos)
-            {
-                // Build modifier string
-                string modifiers = string.Join(" ", classInfo.Modifiers);
-
-                // Add class definition
-                if (modifiers.Contains("abstract"))
-                {
-                    UmlDiagram.AppendLine($"    abstract class \"{classInfo.Name}\" {{");
-                }
-                else if (modifiers.Contains("static"))
-                {
-                    UmlDiagram.AppendLine($"    class \"{classInfo.Name}\" <<static>> {{");
-                }
-                else
-                {
-                    UmlDiagram.AppendLine($"    class \"{classInfo.Name}\" {{");
-                }
-
-                foreach (var property in classInfo.Properties)
-                {
-                    UmlDiagram.AppendLine("     " + property);
-                }
-
-                foreach (var method in classInfo.Methods)
-                {
-                    UmlDiagram.AppendLine("    " + method);
-                }
-                UmlDiagram.AppendLine("}");
-            }
-            
-
-            // Close namespace container
-            if (!string.IsNullOrEmpty(@namespace.Name))
-            {
-                UmlDiagram.AppendLine("}");
-            }
-        }
-
-        foreach (var @namespace in Namespaces)
-        {
-            foreach (var classInfo in @namespace.ClassInfos)
-            {
-                // Add inheritance relationship
-                if (!string.IsNullOrEmpty(classInfo.BaseClass))
-                {
-                    UmlDiagram.AppendLine($"\"{classInfo.Name}\" --|> \"{classInfo.BaseClass}\"");
-                }
-            }
-        }
-
-        UmlDiagram.AppendLine("@enduml");
-        Console.WriteLine(UmlDiagram.ToString());
-
-        var imageBytes = GenerateByteDiagramImage(UmlDiagram.ToString());
-        diagramSource = ConvertByteToImage(imageBytes);
-        DiagramImage = diagramSource;
-    }
 
     static public void AnalyzeProjectComponents()
     {
         ClearData();
-        var files = GetCsFiles(_filePath);
+        var files = GetCsFiles();
 
         const string usingPattern = @"^using\s+([\w.]+);";
         const string namespacePattern = @"^namespace\s+([\w.]+)";
@@ -269,16 +81,16 @@ public static class Analyzer
         }
     }
 
-    private static void ClearData()
+    public static void ClearData()
     {
         Namespaces.Clear();
         CsFiles.Clear();
         Classes.Clear();
     }
 
-    private static List<string> GetCsFiles(string? path)
+    public static List<string> GetCsFiles()
     {
-        return Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories)
+        return Directory.GetFiles(_filePath, "*.cs", SearchOption.AllDirectories)
             .Where(f => !f.Contains("Debug") && !f.Contains("Release"))
             .ToList();
     }
@@ -296,7 +108,7 @@ public static class Analyzer
         Console.WriteLine("Diagram has been made:\n" + UmlDiagram);
     }
 
-    private static ImageSource ConvertByteToImage(byte[] imageBytes)
+    public static ImageSource ConvertByteToImage(byte[] imageBytes)
     {
         var bitmap = new BitmapImage();
         using var ms = new MemoryStream(imageBytes);
@@ -365,7 +177,7 @@ public static class Analyzer
         }
     }
 
-    static public byte[] GenerateByteDiagramImage(string plantUmlText)
+    public static byte[] GenerateByteDiagramImage(string plantUmlText)
     {
         var rendererFactory = new RendererFactory();
         var renderer = rendererFactory.CreateRenderer();
@@ -380,6 +192,11 @@ public static class Analyzer
         }
 
         return null;
+    }
+
+    public static byte[] GenerateByteDiagramImage(StringBuilder plantUmlText)
+    {
+        return GenerateByteDiagramImage(plantUmlText.ToString());
     }
 
     public static void SetDiagram(StringBuilder newDiagram)
@@ -397,5 +214,19 @@ public static class Analyzer
     public static string GetDiagram()
     {
         return UmlDiagram.ToString();
+    }
+
+    public static List<ClassInfo> GetClasses()
+    {
+        return Classes;
+    }
+    public static void AddClass(ClassInfo classes)
+    {
+        Classes.Add(classes);
+    }
+
+    public static List<NamespaceFile> GetNamespaces()
+    {
+        return Namespaces;
     }
 }

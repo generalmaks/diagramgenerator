@@ -10,41 +10,41 @@
         <DockPanel>
             <Menu DockPanel.Dock="Top">
                 <MenuItem Header="Файл">
-                    <MenuItem Header="Новий файл" Click="Click" Tag="NewFile" />
+                    <MenuItem Header="Новий файл" Click="NewFile" Tag="NewFile" />
                     <MenuItem Header="Відкрити файл" Tag="OpenFile" />
-                    <MenuItem Header="Відкрити проект" Tag="OpenProject" Click="Click" />
+                    <MenuItem Header="Відкрити проект" Tag="OpenProject" Click="OpenProject" />
                 </MenuItem>
                 <MenuItem Header="Налаштування">
-                    <CheckBox Content="Включати свойства в програму"/>
+                    <CheckBox Content="Включати свойства в програму" />
                 </MenuItem>
             </Menu>
             <ToolBar Height="50" VerticalAlignment="Top" DockPanel.Dock="Top">
-                <Button Click="Click" Tag="NewFile">
+                <Button Click="NewFile">
                     <Image Source="/icons/NewFileIcon.png" ToolTip="Новий файл" />
                 </Button>
-                <Button Click="Click" Tag="OpenProject">
+                <Button Click="OpenProject">
                     <Image Source="/icons/OpenProjectIcon.png" ToolTip="Відкрити проект" />
                 </Button>
-                <Button Click="Click" Tag="SaveDiagramText">
-                    <Image Source="icons/SaveFileIcon.png" ToolTip="Зберегти текст діаграми"/>
+                <Button Click="SaveDiagramAsText">
+                    <Image Source="icons/SaveFileIcon.png" ToolTip="Зберегти текст діаграми" />
                 </Button>
                 <Separator />
-                <Button Click="Click" Tag="BuildHierarchyDiagram">
-                    <Image Source="icons/HierarchyDiagramIcon.png" ToolTip="Збудувати діаграму ієрархії наслідування"/>
+                <Button Click="BuildHierarchyDiagram">
+                    <Image Source="icons/HierarchyDiagramIcon.png" ToolTip="Збудувати діаграму ієрархії наслідування" />
                 </Button>
-                <Button Click="Click" Tag="BuildComponentsDiagram">
-                    <Image Source="icons/ComponentDiagramIcon.png" ToolTip="Збудувати діаграми компонентів"/>
+                <Button Click="AnalyzeProjectComponents" >
+                    <Image Source="icons/ComponentDiagramIcon.png" ToolTip="Збудувати діаграми компонентів" />
                 </Button>
-                <Button Click="Click" Tag="OpenSettings">
-                    <Image Source="icons/SettingsIcon.png" ToolTip="Показати налаштування"/>
+                <Button Click="OpenSettings">
+                    <Image Source="icons/SettingsIcon.png" ToolTip="Показати налаштування" />
                 </Button>
-                <Button Click="Click" Tag="SaveImage">
-                    <Image Source="icons/SaveImageIcon.png" ToolTip="Зберегти зображення"/>
+                <Button Click="SaveDiagramAsImage">
+                    <Image Source="icons/SaveImageIcon.png" ToolTip="Зберегти зображення" />
                 </Button>
             </ToolBar>
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" /> 
+                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="5" />
                     <ColumnDefinition Width="0.5*" />
                 </Grid.ColumnDefinitions>
@@ -58,12 +58,14 @@
                               ResizeDirection="Columns" />
                 <Grid Grid.Column="2">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <TextBox Grid.Row="0" x:Name="DiagramTextBox" AcceptsReturn="True"
                              Text="Тут буде знаходитись текст вашої UML-діаграми" VerticalScrollBarVisibility="Auto" />
-                    <Button Grid.Row="1" Content="Перевантажити діаграму" Click="ReloadDiagram" Tag="ReloadDiagram" VerticalAlignment="Bottom"></Button>
+                    <Button Grid.Row="1" Content="Перевантажити діаграму" Click="ReloadDiagram" Tag="ReloadDiagram"
+                            VerticalAlignment="Bottom">
+                    </Button>
                 </Grid>
             </Grid>
         </DockPanel>

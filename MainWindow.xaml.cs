@@ -12,35 +12,16 @@ public partial class MainWindow : Window
 {
     private readonly ScaleTransform _scaleTransform = new ScaleTransform();
 
-    private readonly Dictionary<string, Action> _buttonActions;
 
     public MainWindow()
     {
-        _buttonActions = new Dictionary<string, Action>()
-        {
-            { "NewFile", Clear },
-            { "SaveDiagramText", FileEditor.SaveDiagramFile },
-            { "OpenProject", OpenProject },
-            { "SaveImage", FileEditor.SaveImage },
-            { "BuildComponentsDiagram", AnalyzeProjectComponents },
-            { "BuildHierarchyDiagram", BuildHierarchyDiagram }
-        };
         InitializeComponent();
         ImageViewer.LayoutTransform = _scaleTransform;
     }
 
     private void Click(object sender, RoutedEventArgs e)
     {
-        string? tag;
-        if (sender is Button button2)
-            tag = button2.Tag.ToString();
-        else if (sender is MenuItem menuItem2)
-            tag = menuItem2.Tag.ToString();
-        else
-            return;
 
-        var action = _buttonActions[tag];
-        action.Invoke();
     }
 
     private void DiagramViewbox_OnMouseWheel(object sender, MouseWheelEventArgs e)
@@ -65,12 +46,12 @@ public partial class MainWindow : Window
         ImageViewer.Source = Analyzer.DiagramImage;
     }
 
-    private void OpenProject()
+    private void OpenProject(object sender, RoutedEventArgs routedEventArgs)
     {
         Analyzer.GetProject();
     }
 
-    private void AnalyzeProjectComponents()
+    private void AnalyzeProjectComponents(object sender, RoutedEventArgs routedEventArgs)
     {
         var image = ImageViewer.Source;
         Analyzer.CreateComponentsDiagram(ref image);
@@ -78,10 +59,10 @@ public partial class MainWindow : Window
         DiagramTextBox.Text = Analyzer.UmlDiagram.ToString();
     }
 
-    private void BuildHierarchyDiagram()
+    private void BuildHierarchyDiagram(object sender, RoutedEventArgs routedEventArgs)
     {
         var image = ImageViewer.Source;
-        Analyzer.CreateHierarchyDiagram(ref image);
+        ClassHierarchy.CreateHierarchyDiagram(ref image);
         ImageViewer.Source = image;
         DiagramTextBox.Text = Analyzer.UmlDiagram.ToString();
     }
@@ -90,5 +71,25 @@ public partial class MainWindow : Window
     {
         ImageViewer.Source = null;
         DiagramTextBox.Text = "";
+    }
+
+    private void NewFile(object sender, RoutedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void SaveDiagramAsText(object sender, RoutedEventArgs e)
+    {
+        FileEditor.SaveDiagramFile();
+    }
+
+    private void OpenSettings(object sender, RoutedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void SaveDiagramAsImage(object sender, RoutedEventArgs e)
+    {
+        FileEditor.SaveImage();
     }
 }
